@@ -91,5 +91,9 @@ check_version() {
 
   result=$(artifactory_versions "$artifacts_url" "$regex")
   index=$(echo $result | jq --arg v "$version" '[.[].version] | index($v)')
-  echo $result | jq --arg i "$index" '.[($i | tonumber):]'
+  if [[ "$index" == "null" ]]; then
+    echo $result | jq --arg i "$index" '.[-1]'
+  else
+    echo $result | jq --arg i "$index" '.[($i | tonumber):]'
+  fi
 }
