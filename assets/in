@@ -77,6 +77,14 @@ fi
 args_url="$endpoint$repository/$file"
 
 # echo $args_security "-O" "$args_url"
-curl $args_security "-O" "$args_url"
+MSG=`curl $args_security "-O" "$args_url"`
+
+if echo $MSG | jq -e 'has("errors")' >/dev/null ; then
+  echo "Endpoint returned server error:"
+  echo $MSG | jq -c '.errors[0]'
+  exit 1
+else
+  echo $MSG
+fi
 
 echo $file_json | jq '.[].version | {version: {version: .}}' >&3
