@@ -89,7 +89,7 @@ jobs:
         - "Use file(s) from ./file-repository here..."
 ```
 
-See [pipeline.yml](https://github.com/pivotalservices/artifactory-resource/blob/master/pipeline.yml) for an example of a full pipeline definition file.
+See [pipeline.yml](https://github.com/pivotalservices/artifactory-resource/blob/develop/example/pipeline.yml) for an example of a full pipeline definition file.
 
 ## Resource behavior
 
