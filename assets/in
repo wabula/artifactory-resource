@@ -30,6 +30,7 @@ repository=$(jq -r '.source.repository // ""' < $payload)
 file=$(jq -r '.params.file // ""' < $payload)
 folder=$(jq -r '.params.folder // ""' < $payload)
 paramRegex=$(jq -r '.params.regex // ""' < $payload)
+skip_download="$(jq -r '.params.skip_download // false' < $payload)"
 
 version=$(jq -r '.version.version // ""' < $payload)
 
@@ -46,6 +47,12 @@ fi
 if [ -z "$version" ]; then
   echo "Missing version"
   exit 1
+fi
+
+if [ "$skip_download" = "true" ]; then
+  echo "Skipping download"
+  jq -n "{ version: { version: $(echo $version | jq -R .) } }" >&3
+  exit 0
 fi
 
 # Building CURL request
@@ -77,6 +84,15 @@ fi
 args_url="$endpoint$repository/$file"
 
 # echo -f $args_security "-O" "$args_url"
-curl -f $args_security "-O" "$args_url"
+MSG=`curl -f $args_security "-O" "$args_url"`
+
+if echo $MSG | jq -e 'has("errors")' >/dev/null ; then
+  echo "Endpoint returned server error:"
+  echo $MSG | jq -c '.errors[0]'
+  exit 1
+else
+  echo $MSG
+fi
 
 echo $file_json | jq '.[].version | {version: {version: .}}' >&3
+

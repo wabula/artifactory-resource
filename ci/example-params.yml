@@ -1,0 +1,10 @@
+
+artifactory-resource-git-uri: https://github.com/pivotalservices/artifactory-resource
+artifactory-resource-git-branch: master
+
+git-username: git-username
+git-password: git-password
+
+docker-username: docker-id
+docker-password: docker-password
+docker-repository: docker-id/artifactory-resource
