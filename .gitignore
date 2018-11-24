@@ -1,0 +1,2 @@
+# Ignore custom CI parameters.
+ci/params.yml
