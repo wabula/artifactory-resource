@@ -111,5 +111,69 @@ Deploys the artifact.
 
 * `file`: *Required.* The path to the artifact to deploy.
 
+## Development
+
+### Build Docker image
+
+Run the following command in the root folder:
+```
+$ docker build -t username/artifactory-resource .
+```
+
+### Running tests
+
+The test suite consists of a mixture of unit and integration tests.
+
+The unit test suite requires [bats](https://github.com/bats-core/bats-core) to be [installed](https://github.com/bats-core/bats-core#installation).
+
+For example, to execute the unit tests for `common.sh` functions:
+```
+$ bats test/common.bats
+```
+
+In order to run the integration tests, you must be running Artifactory on port 8081. The easiest way
+to do that is to run Artifactory in a [Docker container](https://www.jfrog.com/confluence/display/RTF/Installing+with+Docker):
+```
+$ docker run --name artifactory -d -p 8081:8081 docker.bintray.io/jfrog/artifactory-oss:latest
+```
+
+Then you need to run a script to seed it with test data:
+```
+TBD
+```
+
+To run the integration test suite (which is in the container image at /opt/resource-tests):
+```
+$ docker run -it \
+  --env ART_IP=127.0.0.1 \
+  --env ART_USER=admin \
+  --env ART_PWD=admin \
+  username/artifactory-resource:latest \
+  /opt/resource-tests/test-check.sh
+
+$ docker run -it \
+  --env ART_IP=127.0.0.1 \
+  --env ART_USER=admin \
+  --env ART_PWD=admin \
+  username/artifactory-resource:latest \
+  /opt/resource-tests/test-in.sh
+
+$ docker run -it \
+  --env ART_IP=127.0.0.1 \
+  --env ART_USER=admin \
+  --env ART_PWD=admin \
+  username/artifactory-resource:latest \
+  /opt/resource-tests/test-out.sh
+```
+
+Or you can build `Dockerfile.tests` to run all tests:
+```
+$ docker build -f Dockerfile.tests \
+  --build-arg ART_IP=127.0.0.1 \
+  --build-arg ART_USER=admin \
+  --build-arg ART_PWD=admin \
+  -t username/artifactory-resource:test .
+```
+
 ## Credits
 This resource was originally based on the artifactory resource work of [mborges](https://github.com/mborges-pivotal/artifactory-resource).
