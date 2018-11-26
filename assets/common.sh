@@ -13,7 +13,7 @@ get_current_version() {
   local regex=$1
   local folder_contents=$2
 
-  echo "$folder_contents" | jq --arg v "$regex" '[.children[].uri | capture($v)]' | jq 'sort_by(.version | split(".") | map(tonumber))' | jq '[.[length-1] | {version: .version}]'
+  echo "$folder_contents" | jq --arg v "$regex" '[.children[].uri | capture($v)]' | jq 'sort_by(.version | split("[a-zA-Z.-]";"x") | map( tonumber? // .))' | jq '[.[length-1] | {version: .version}]'
 }
 
 # Return all versions
@@ -21,14 +21,14 @@ get_all_versions() {
   local regex=$1
   local folder_contents=$2
 
-  echo "$folder_contents" | jq --arg v "$regex" '[.children[].uri | capture($v)]' | jq 'sort_by(.version | split(".") | map(tonumber))' | jq '[.[] | {version: .version}]'
+  echo "$folder_contents" | jq --arg v "$regex" '[.children[].uri | capture($v)]' | jq 'sort_by(.version | split("[a-zA-Z.-]";"x") | map( tonumber? // .))' | jq '[.[] | {version: .version}]'
 }
 
 get_files() {
   local regex="(?<uri>$1)"
   local folder_contents=$2
 
-  echo "$folder_contents" | jq --arg v "$regex" '[.children[].uri | capture($v)]' | jq 'sort_by(.version  | split(".") | map(tonumber))' | jq '[.[] | {uri: .uri, version: .version}]'
+  echo "$folder_contents" | jq --arg v "$regex" '[.children[].uri | capture($v)]' | jq 'sort_by(.version  | split("[a-zA-Z.-]";"x") | map( tonumber? // .))' | jq '[.[] | {uri: .uri, version: .version}]'
 }
 
 artifactory_get_folder_contents() {
@@ -90,6 +90,10 @@ check_version() {
   local version=$3
 
   result=$(artifactory_versions "$artifacts_url" "$regex")
-  echo $result | jq --arg v "$version" '[foreach .[] as $item ([]; $item ; if $item.version >= $v then $item else empty end)]'
-
+  index=$(echo $result | jq --arg v "$version" '[.[].version] | index($v)')
+  if [[ "$index" == "null" ]]; then
+    echo $result | jq --arg i "$index" '.[-1]'
+  else
+    echo $result | jq --arg i "$index" '.[($i | tonumber):]'
+  fi
 }
