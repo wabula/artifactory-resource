@@ -27,15 +27,33 @@ password=$(jq -r '.source.password // ""' < $payload)
 skip_ssl_verification=$(jq -r '.source.skip_ssl_verification // ""' < $payload)
 
 repository=$(jq -r '.source.repository // ""' < $payload)
+paramRepository=$(jq -r '.params.repository // ""' < $payload)
 file=$(jq -r '.params.file // ""' < $payload)
 folder=$(jq -r '.params.folder // ""' < $payload)
 paramRegex=$(jq -r '.params.regex // ""' < $payload)
+skip_download="$(jq -r '.params.skip_download // false' < $payload)"
+
 
 version=$(jq -r '.version.version // ""' < $payload)
+
+if [ -z "$version" ]; then
+  echo "Missing version"
+  exit 1
+fi
+
+if [ "$skip_download" = "true" ]; then
+  echo "Skipping download"
+  jq -n "{ version: { version: $(echo $version | jq -R .) } }" >&3
+  exit 0
+fi
 
 if [ -z "$endpoint" ]; then
   echo "invalid payload (missing endpoint)"
   exit 1
+fi
+
+if [ ! -z "$paramRepository" ]; then
+  repository="$paramRepository"
 fi
 
 if [ -z "$repository" ]; then
@@ -43,13 +61,8 @@ if [ -z "$repository" ]; then
   exit 1
 fi
 
-if [ -z "$version" ]; then
-  echo "Missing version"
-  exit 1
-fi
-
 # Building CURL request
-args_url="$endpoint/api/storage$repository$folder"
+args_url="$endpoint/api/storage/$repository$folder"
 
 args_security=
 
